@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<head>
+  <script type="text/javascript" src="bower_components/tinymce-dist/tinymce.js"></script>
+  <script type="text/javascript" src="bower_components/angular/angular.js"></script>
+  <script type="text/javascript" src="bower_components/angular-ui-tinymce/src/tinymce.js"></script>
+    <script src="https://cdn.firebase.com/js/client/2.2.4/firebase.js"></script>
+  <script src="https://cdn.firebase.com/libs/angularfire/1.2.0/angularfire.min.js"></script>
+  <script type="text/javascript" src="app.js"></script>
+
+</head>
+<body ng-app="myApp">
+  <form method="post" ng-controller="TinyMceController">
+
+    <pre>{{ tinymceModel.section1 }}</pre>
+    <textarea ui-tinymce="tinymceOptions" ng-model="tinymceModel.section1"></textarea>
+    <button ng-click="getContent()">Get content</button>
+    <button ng-click="setContent()">Set content</button>
+  </form>
+  
+  
+  <div ng-controller="TinyMceController">
+    {{tinymceModel2}}
+    <textarea ui-tinymce="tinymceOptions" ng-model="tinymceModel2"></textarea>
+  </div>
+</body>
