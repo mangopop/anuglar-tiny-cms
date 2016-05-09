@@ -1,0 +1,9 @@
+{
+  "firebase": "angular-tiny-cms",
+  "public": "./",
+  "ignore": [
+    "firebase.json",
+    "**/.*",
+    "**/node_modules/**"
+  ]
+}
