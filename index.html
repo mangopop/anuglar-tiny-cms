@@ -1,25 +1,45 @@
-<!DOCTYPE html>
+<html ng-app="myApp">
 <head>
-  <script type="text/javascript" src="bower_components/tinymce-dist/tinymce.js"></script>
-  <script type="text/javascript" src="bower_components/angular/angular.js"></script>
-  <script type="text/javascript" src="bower_components/angular-ui-tinymce/src/tinymce.js"></script>
+    <!--<base href="/">-->
+    <link rel="stylesheet" href="bower_components/angular-ui-notification/dist/angular-ui-notification.css">
+    <link rel="stylesheet" href="bower_components/foundation/css/foundation.css">
+    <script type="text/javascript" src="bower_components/tinymce-dist/tinymce.js"></script>
+    <script type="text/javascript" src="bower_components/angular/angular.js"></script>
+    <script type="text/javascript" src="bower_components/angular-ui-router/release/angular-ui-router.js"></script>
+    <script type="text/javascript" src="bower_components/angular-sanitize/angular-sanitize.js"></script>
+    <script type="text/javascript" src="bower_components/angular-ui-tinymce/src/tinymce.js"></script>
+    <script type="text/javascript" src="bower_components/angular-ui-notification/dist/angular-ui-notification.js"></script>
     <script src="https://cdn.firebase.com/js/client/2.2.4/firebase.js"></script>
   <script src="https://cdn.firebase.com/libs/angularfire/1.2.0/angularfire.min.js"></script>
   <script type="text/javascript" src="app.js"></script>
 
 </head>
-<body ng-app="myApp">
-  <form method="post" ng-controller="TinyMceController">
+<body >
 
-    <pre>{{ tinymceModel.section1 }}</pre>
-    <textarea ui-tinymce="tinymceOptions" ng-model="tinymceModel.section1"></textarea>
-    <button ng-click="getContent()">Get content</button>
-    <button ng-click="setContent()">Set content</button>
-  </form>
-  
-  
-  <div ng-controller="TinyMceController">
-    {{tinymceModel2}}
-    <textarea ui-tinymce="tinymceOptions" ng-model="tinymceModel2"></textarea>
-  </div>
+<nav class="top-bar" data-topbar role="navigation">
+    <!--<ul class="title-area">-->
+        <!--<li class="name">-->
+            <!--<h1><a href="#">My Site</a></h1>-->
+        <!--</li>-->
+        <!--&lt;!&ndash; Remove the class "menu-icon" to get rid of menu icon. Take out "Menu" to just have icon alone &ndash;&gt;-->
+        <!--<li class="toggle-topbar menu-icon"><a href="#"><span>Menu</span></a></li>-->
+    <!--</ul>-->
+
+    <section class="top-bar-section">
+        <!-- Left Nav Section -->
+        <ul class="left">
+            <li><a ui-sref="home">Home</a></li>
+            <li><a ui-sref="edit">Edit</a></li>
+        </ul>
+    </section>
+</nav>
+
+<div ui-view></div>
+
+<script type="application/javascript" src="bower_components/foundation/js/vendor/jquery.js"></script>
+<script type="application/javascript" src="bower_components/foundation/js/foundation.js"></script>
+<script type="application/javascript" src="bower_components/foundation/js/foundation/foundation.topbar.js"></script>
+<script>$(document).foundation();</script>
+
 </body>
+</html>

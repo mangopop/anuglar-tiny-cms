@@ -17,5 +17,11 @@
   ],
   "devDependencies": {
     "angular-ui-tinymce": "^0.0.15"
+  },
+  "dependencies": {
+    "angular-sanitize": "^1.5.5",
+    "angular-ui-router": "^0.2.18",
+    "angular-ui-notification": "^0.2.0",
+    "foundation": "^5.5.3"
   }
 }

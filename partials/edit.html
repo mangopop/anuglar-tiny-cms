@@ -1,0 +1,24 @@
+<div>{{user.message}}</div>
+<a ng-if="user.loggedIn === true" ng-click="logout()">Logout</a>
+<form novalidate  action="" ng-if="user.loggedIn === false">
+    <input type="text" ng-model="user.email">
+    <input type="text" ng-model="user.password">
+    <input type="submit" ng-click="login(user)" value="Login" />
+</form>
+
+<div ng-if="user.loggedIn === true">
+    <form method="post">
+        <pre>{{ tinymceModel.section1 }}</pre>
+        <textarea ui-tinymce="tinymceOptions" ng-model="tinymceModel.section1"></textarea>
+        <textarea ui-tinymce="tinymceOptions" ng-model="tinymceModel.section2"></textarea>
+        <!--<button ng-click="getContent()">Get content</button>-->
+        <!--<button ng-click="setContent()">Set content</button>-->
+    </form>
+
+    <!--<div>-->
+        <!--{{tinymceModel2}}-->
+        <!--<textarea ui-tinymce="tinymceOptions" ng-model="tinymceModel2"></textarea>-->
+    <!--</div>-->
+
+    <button ng-model="tinymceModel.section1" ng-click="saveModel()">Save</button>
+</div>
