@@ -1,0 +1,8 @@
+<div>{{user.message}}</div>
+
+<form novalidate  action="" ng-if="!authData">
+<!--<form novalidate  action="" ng-if="user.loggedIn === false">-->
+    <input type="text" ng-model="user.email">
+    <input type="text" ng-model="user.password">
+    <input type="submit" ng-click="login(user)" value="Login" />
+</form>

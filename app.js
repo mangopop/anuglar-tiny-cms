@@ -1,6 +1,15 @@
-var myAppModule = angular.module('myApp', ['ui.tinymce', 'firebase', 'ui.router', 'ngSanitize', 'ui-notification']);
+var app = angular.module('myApp', ['ui.tinymce', 'firebase', 'ui.router', 'ngSanitize', 'ui-notification']);
+app.run(["$rootScope", "$state", function ($rootScope, $state) {
+    $rootScope.$on("$stateChangeError", function (event, toState, toParams, fromState, fromParams, error) {
+        // We can catch the error thrown when the $requireAuth promise is rejected
+        // and redirect the user back to the home page
+        if (error === "AUTH_REQUIRED") {
+            $state.go("home");
+        }
+    });
+}]);
 
-myAppModule.config(function ($stateProvider, $urlRouterProvider, $locationProvider) {
+app.config(function ($stateProvider, $urlRouterProvider, $locationProvider) {
 
     // For any unmatched url, redirect to /home
     $urlRouterProvider.otherwise("/home");
@@ -10,21 +19,58 @@ myAppModule.config(function ($stateProvider, $urlRouterProvider, $locationProvid
         .state('home', {
             url: "/home",
             templateUrl: "partials/home.html",
-            controller: 'HomeController'
+            controller: 'HomeController',
+            resolve: {
+                // controller will not be loaded until $waitForAuth resolves
+                // Auth refers to our $firebaseAuth wrapper in the example above
+                "currentAuth": ["Auth", function (Auth) {
+                    // $waitForAuth returns a promise so the resolve waits for it to complete
+                    return Auth.$waitForAuth();
+                }]
+            }
+        })
+        .state('login', {
+            url: "/login",
+            templateUrl: "partials/login.html",
+            controller: 'LoginController',
+            resolve: {
+                // controller will not be loaded until $waitForAuth resolves
+                // Auth refers to our $firebaseAuth wrapper in the example above
+                "currentAuth": ["Auth", function (Auth) {
+                    // $waitForAuth returns a promise so the resolve waits for it to complete
+                    return Auth.$waitForAuth();
+                }]
+            }
         })
         .state('edit', {
             url: "/edit",
             templateUrl: "partials/edit.html",
             controller: 'EditController',
+            resolve: {
+                // controller will not be loaded until $requireAuth resolves
+                // Auth refers to our $firebaseAuth wrapper in the example above
+                "currentAuth": ["Auth", function (Auth) {
+                    // $requireAuth returns a promise so the resolve waits for it to complete
+                    // If the promise is rejected, it will throw a $stateChangeError (see above)
+                    return Auth.$requireAuth();
+                }]
+            },
             data: {
                 protected: true
             }
         });
     // $locationProvider.html5Mode(true); //need to do server side re-writes https://github.com/angular-ui/ui-router/wiki/Frequently-Asked-Questions#how-to-configure-your-server-to-work-with-html5mode
 });
+
+// app.run(['$rootScope', 'Auth', function($rootScope, Auth) {
+// // track status of authentication
+// Auth.$onAuth(function(user) {
+//     $rootScope.loggedIn = !!user;
+// });
+
 //http://stackoverflow.com/questions/20663076/angularjs-app-run-documentation
 //works but trying a different way
-// myAppModule.run(function($rootScope, $state) {
+// app.run(function($rootScope, $state) {
 //     $rootScope.$on('$stateChangeStart', function(e, to) {
 //         console.log(to);
 //         var notLoggedIn = true;
@@ -52,82 +98,121 @@ myAppModule.config(function ($stateProvider, $urlRouterProvider, $locationProvid
 //     });
 // });
 
-myAppModule.controller('HomeController', function ($scope, $firebaseObject) {
+
+//this will return fireBaseAuth
+app.factory("Auth", ["$firebaseAuth",
+    function ($firebaseAuth) {
+        var ref = new Firebase("https://torrid-inferno-1621.firebaseio.com", "example3");
+        return $firebaseAuth(ref);
+    }
+]);
+
+app.controller('MainController', function ($scope, Auth, $firebaseObject, Notification) {
     var ref = new Firebase("https://torrid-inferno-1621.firebaseio.com");
     $scope.data = $firebaseObject(ref);
+    // $scope.authData = Auth.$getAuth();
+        // any time auth status updates, add the user data to scope
+    Auth.$onAuth(function (authData) {
+        $scope.authData = authData;
+    });
+    // $rootScope.authData = Auth.$getAuth();
+    //logout
+    $scope.logout = function () {
+        //When logout is called, the $onAuth() callback(s) will be fired.
+        Auth.$unauth();
+        // $scope.authData.$unauth();
+        console.log($scope.authData);
+
+        if($scope.authData){
+            Notification.success('Successfully logged out');
+        }else{
+            Notification.error('failed to log out');
+        }
+    };
+
+});
+
+app.controller('HomeController', function ($scope, currentAuth, $firebaseObject) {
+    var ref = new Firebase("https://torrid-inferno-1621.firebaseio.com");
+    $scope.data = $firebaseObject(ref);
+    //assign db data to scope
     $scope.homeData = $firebaseObject(ref.child('homeSection'));
 
 });
 
-myAppModule.controller('EditController', function ($scope, $timeout, $firebaseObject, Notification) {
+app.controller('LoginController', function ($scope, $rootScope,currentAuth, Auth, $firebaseObject, Notification) {
     var ref = new Firebase("https://torrid-inferno-1621.firebaseio.com");
     $scope.data = $firebaseObject(ref);
     $scope.user = {};
     $scope.user.loggedIn = false;
-    $scope.user.loggedInMessage = '';
-    var authData = ref.getAuth();
+    $scope.user.loggedInMessage = '';    
+    $scope.authData;
+    
+    //TODO hide the login button depending on state
+    
+    // pass this as factory instead
+    // var auth = $firebaseAuth(ref); //angular version
+    // $scope.authObj = $firebaseAuth(ref); //angular version
+    $scope.auth = Auth;
+
+    // var authData = ref.getAuth();
 
     // ***************** login **********************//
-
-    $scope.login = function(user){
-        // Or with an email/password combination
-        ref.authWithPassword({
-            email    : user.email,
-            password : user.password
-        }, authHandler);
-
+    //login
+    $scope.login = function (user) {
+        Auth.$authWithPassword({ //could use Auth.$authWithPassword?
+            email: user.email,
+            password: user.password
+        }).then(function (authData) {
+            console.log("Logged in as:", authData.uid);
+            Notification.success('Successfully logged in');
+        }).catch(function (error) {
+            console.error("Authentication failed:", error);
+            Notification.error('Failed to log out');
+        });
     };
 
     //logout
-    $scope.logout = function(){
-        ref.unauth();
-        console.log(authData);
-        //this doesn't work not timeout issue
-        $timeout(function(){
-            if(authData === null){
-                Notification.success('Successfully logged out');
-            }else{
-                Notification.error('failed to log out');
-            }
-        },500)
+    // $scope.logout = function () {
+    //     //When logout is called, the $onAuth() callback(s) will be fired.
+    //     Auth.$unauth();
+    //     // $scope.authData.$unauth();
+    //     console.log($scope.authData);
 
-    };
+    //     // if($scope.auth === null){
+    //     //     Notification.success('Successfully logged out');
+    //     // }else{
+    //     //     Notification.error('failed to log out');
+    //     // }
+    // };
+    
+    // $scope.authData = Auth.$getAuth();
+    // $rootScope.authData = Auth.$getAuth();
 
-    // Create a callback which logs the current auth state
-    function authDataCallback(authData) {
-        if (authData) {
-            console.log("User " + authData.uid + " is logged in with " + authData.provider);
-            console.log(authData.auth.token.email);
-            $scope.user.savedEmail = authData.auth.token.email;
-            $scope.user.loggedIn = true;
-            $scope.user.message = 'You are logged in as '+$scope.user.savedEmail;
-        } else {
-            console.log("User is logged out");
-            $scope.user.loggedIn = false;
-            $scope.user.message = 'You are not logged in';
-        }
-    }
-    ref.onAuth(authDataCallback);
+    // if ($scope.authData) {
+    //     console.log("Logged in as:", $scope.authData.uid);
+    // } else {
+    //     console.log("Logged out");
+    // }
 
-    // Create a callback to handle the result of the authentication
-    function authHandler(error, authData) {
-        if (error) {
-            console.log("Login Failed!", error);
-            Notification.error('failed to log in');
-        } else {
-            console.log("Authenticated successfully with payload:", $scope.user.savedEmail);
-            Notification.success('Successfully logged in');
-        }
-    }
+    // any time auth status updates, add the user data to scope
+    // Auth.$onAuth(function (authData) {
+    //     $scope.authData = authData;
+    // });
 
-
+    //non angular fire stuff
     // $scope.data = angular.fromJson($firebaseObject(ref));
-
     // var obj = new $firebaseObject(ref);
     // obj.$loaded().then(function() {
     //   $scope.tinymceModel = obj.contactSection.section1;
     //   console.log(obj.contactSection.section1);
     // });
+
+});
+
+
+app.controller('EditController', function ($scope, $timeout, currentAuth, $firebaseObject, $firebaseAuth, Notification, Auth) {
+var ref = new Firebase("https://torrid-inferno-1621.firebaseio.com");
 
     $scope.tinymceModel = $firebaseObject(ref.child('homeSection'));
     $scope.tinymceModel2 = 'Initial2 content';
@@ -139,7 +224,6 @@ myAppModule.controller('EditController', function ($scope, $timeout, $firebaseOb
             Notification.success('Error notification');
         });
     };
-
 
     // $scope.getContent = function () {
     //     console.log('Editor content:', $scope.tinymceModel);
